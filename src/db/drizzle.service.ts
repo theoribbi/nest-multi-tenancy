@@ -5,6 +5,7 @@ import * as publicSchema from './schema/public';
 import * as tenantSchema from './schema/tenant';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as path from 'node:path';
+import { companies } from './schema/public';
 
 type DrizzleDb = NodePgDatabase<any>;
 
@@ -60,6 +61,22 @@ export class DrizzleService implements OnModuleDestroy {
   }
 
   /**
+   * Migrate all tenants
+   */
+  async migrateAllTenants(): Promise<void> {
+    const rows = await this.dbPublic
+      .select({ schemaName: companies.schemaName })
+      .from(companies);
+
+    for (const { schemaName } of rows) {
+      await this.createTenantSchema(schemaName);
+    }
+
+    console.log(`✅ Migrated ${rows.length} tenants`);
+  }
+
+
+  /**
    * Execute a function with a Drizzle db pointed on a tenant schema.
    */
   async withTenantDb<T>(
@@ -68,9 +85,28 @@ export class DrizzleService implements OnModuleDestroy {
   ): Promise<T> {
     const client = await this.pool.connect();
     try {
-      await client.query(`SET LOCAL search_path TO "${schemaName}", public`);
-      const db = drizzle(client, { schema: tenantSchema });
-      return await fn(db);
+      // Verify schema exists
+      const schemaCheck = await client.query(
+        `SELECT schema_name FROM information_schema.schemata WHERE schema_name = $1`,
+        [schemaName],
+      );
+      if (schemaCheck.rows.length === 0) {
+        throw new Error(
+          `Tenant schema "${schemaName}" does not exist. Please run migrations first via POST /admin/db/migrate-tenants`,
+        );
+      }
+
+      await client.query('BEGIN');
+      try {
+        await client.query(`SET LOCAL search_path TO "${schemaName}", public`);
+        const db = drizzle(client, { schema: tenantSchema });
+        const result = await fn(db);
+        await client.query('COMMIT');
+        return result;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
     } finally {
       client.release();
     }
