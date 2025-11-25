@@ -26,17 +26,15 @@ export class UsersService {
         return row.schemaName;
     }
 
-    async findAllForCompany(companyId: string): Promise<User[]> {
-        const schemaName = await this.getSchemaNameForCompany(companyId);
+    // --- Methods using schemaName directly (for Tenant Context) ---
 
+    async findAll(schemaName: string): Promise<User[]> {
         return this.drizzle.withTenantDb(schemaName, (db) => {
             return db.select().from(users);
         });
     }
 
-    async findOneForCompany(companyId: string, userId: string): Promise<User | null> {
-        const schemaName = await this.getSchemaNameForCompany(companyId);
-
+    async findOne(schemaName: string, userId: string): Promise<User | null> {
         return this.drizzle.withTenantDb(schemaName, async (db) => {
             const rows = await db
                 .select()
@@ -48,9 +46,7 @@ export class UsersService {
         });
     }
 
-    async createForCompany(companyId: string, data: { email: string; firstName?: string; lastName?: string }): Promise<User> {
-        const schemaName = await this.getSchemaNameForCompany(companyId);
-
+    async create(schemaName: string, data: { email: string; firstName?: string; lastName?: string }): Promise<User> {
         return this.drizzle.withTenantDb(schemaName, async (db) => {
             try {
                 const [created] = await db
@@ -74,9 +70,7 @@ export class UsersService {
         });
     }
 
-    async updateForCompany(companyId: string, userId: string, data: Partial<{ email: string; firstName?: string; lastName?: string }>): Promise<User | null> {
-        const schemaName = await this.getSchemaNameForCompany(companyId);
-
+    async update(schemaName: string, userId: string, data: Partial<{ email: string; firstName?: string; lastName?: string }>): Promise<User | null> {
         return this.drizzle.withTenantDb(schemaName, async (db) => {
             try {
                 const [updated] = await db
@@ -96,11 +90,37 @@ export class UsersService {
         });
     }
 
-    async removeForCompany(companyId: string, userId: string): Promise<void> {
-        const schemaName = await this.getSchemaNameForCompany(companyId);
-
+    async remove(schemaName: string, userId: string): Promise<void> {
         await this.drizzle.withTenantDb(schemaName, async (db) => {
             await db.delete(users).where(eq(users.id, userId));
         });
+    }
+
+
+    // --- Legacy Methods using companyId (Admin Context) ---
+
+    async findAllForCompany(companyId: string): Promise<User[]> {
+        const schemaName = await this.getSchemaNameForCompany(companyId);
+        return this.findAll(schemaName);
+    }
+
+    async findOneForCompany(companyId: string, userId: string): Promise<User | null> {
+        const schemaName = await this.getSchemaNameForCompany(companyId);
+        return this.findOne(schemaName, userId);
+    }
+
+    async createForCompany(companyId: string, data: { email: string; firstName?: string; lastName?: string }): Promise<User> {
+        const schemaName = await this.getSchemaNameForCompany(companyId);
+        return this.create(schemaName, data);
+    }
+
+    async updateForCompany(companyId: string, userId: string, data: Partial<{ email: string; firstName?: string; lastName?: string }>): Promise<User | null> {
+        const schemaName = await this.getSchemaNameForCompany(companyId);
+        return this.update(schemaName, userId, data);
+    }
+
+    async removeForCompany(companyId: string, userId: string): Promise<void> {
+        const schemaName = await this.getSchemaNameForCompany(companyId);
+        return this.remove(schemaName, userId);
     }
 }
