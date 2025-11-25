@@ -1,8 +1,8 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { CompaniesService } from '@companies/companies.service';
-import type { Company } from '@schema/companies';
-import { ApiOkResponse, ApiNotFoundResponse } from '@nestjs/swagger';
-import { CompanyDto } from '@companies/dto/company.dto';
+import type { Company } from '@db/schema/public/companies';
+import { ApiOkResponse, ApiNotFoundResponse, ApiCreatedResponse } from '@nestjs/swagger';
+import { CompanyDto, CreateCompanyDto } from '@companies/dto/company.dto';
 
 @Controller('companies')
 export class CompaniesController {
@@ -26,5 +26,11 @@ export class CompaniesController {
     @ApiNotFoundResponse()
     async getCompanyBySlug(@Param('slug') slug: string): Promise<Company | null> {
         return this.companiesService.getCompanyBySlug(slug);
+    }
+
+    @Post()
+    @ApiCreatedResponse({ type: CompanyDto })
+    async createCompany(@Body() input: CreateCompanyDto): Promise<CompanyDto> {
+        return this.companiesService.createCompany(input);
     }
 }

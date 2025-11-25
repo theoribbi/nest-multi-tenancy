@@ -1,11 +1,11 @@
 {
-  "id": "46853abf-1968-4b37-9e65-460d18bc4587",
+  "id": "0881a8cc-9d50-4d2f-8ca4-fb336e694755",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.companies": {
-      "name": "companies",
+    "public.users": {
+      "name": "users",
       "schema": "",
       "columns": {
         "id": {
@@ -15,26 +15,20 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "name": {
-          "name": "name",
+        "email": {
+          "name": "email",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
+        "first_name": {
+          "name": "first_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "schema_name": {
-          "name": "schema_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "logo_url": {
-          "name": "logo_url",
+        "last_name": {
+          "name": "last_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -51,18 +45,11 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "companies_slug_unique": {
-          "name": "companies_slug_unique",
+        "users_email_unique": {
+          "name": "users_email_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "slug"
-          ]
-        },
-        "companies_schema_name_unique": {
-          "name": "companies_schema_name_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "schema_name"
+            "email"
           ]
         }
       },

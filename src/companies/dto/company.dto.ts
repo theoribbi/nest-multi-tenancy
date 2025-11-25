@@ -17,3 +17,11 @@ export class CompanyDto {
   logoUrl?: string | null;
 
 }
+
+export class CreateCompanyDto {
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty()
+  slug!: string;
+}

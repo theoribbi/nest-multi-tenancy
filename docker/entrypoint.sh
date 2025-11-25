@@ -5,7 +5,7 @@ set -e
 # This ensures dependencies are installed even when volume is mounted
 if [ ! -d "node_modules" ] || [ ! -f "node_modules/.pnpm-lock.yaml" ] || [ "pnpm-lock.yaml" -nt "node_modules/.pnpm-lock.yaml" ]; then
   echo "Installing dependencies..."
-  pnpm install --frozen-lockfile
+  CI=true pnpm install --frozen-lockfile
 fi
 
 # Execute the command passed to the entrypoint
