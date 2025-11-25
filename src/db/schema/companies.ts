@@ -14,3 +14,6 @@ export const companies = pgTable("companies", {
         .defaultNow()
         .notNull(),
 });
+
+export type Company = typeof companies.$inferSelect;
+export type CompanyInsert = typeof companies.$inferInsert;
