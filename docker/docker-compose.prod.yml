@@ -1,0 +1,73 @@
+version: '3.8'
+
+# Production Docker Compose Configuration
+# TODO: Configure this file according to your production requirements
+# 
+# Example structure:
+# - Use environment variables from .env.prod or secrets management
+# - Configure proper volumes for persistent data
+# - Set up reverse proxy (nginx, traefik, etc.)
+# - Configure SSL/TLS certificates
+# - Set up monitoring and logging
+# - Configure backup strategies
+# - Use managed database services (AWS RDS, Google Cloud SQL, etc.) instead of containerized DB
+
+services:
+  # app:
+  #   build:
+  #     context: ..
+  #     dockerfile: docker/Dockerfile
+  #   # image: your-registry/nest-multi-tenancy:latest
+  #   container_name: nest-multi-tenancy-app-prod
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3000
+  #     - DATABASE_HOST=${DATABASE_HOST}
+  #     - DATABASE_PORT=${DATABASE_PORT}
+  #     - DATABASE_USER=${DATABASE_USER}
+  #     - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+  #     - DATABASE_NAME=${DATABASE_NAME}
+  #   networks:
+  #     - nest-network-prod
+  #   restart: always
+  #   deploy:
+  #     replicas: 2
+  #     resources:
+  #       limits:
+  #         cpus: '1'
+  #         memory: 512M
+  #       reservations:
+  #         cpus: '0.5'
+  #         memory: 256M
+
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: nest-multi-tenancy-db-prod
+  #   environment:
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #   volumes:
+  #     - postgres_data_prod:/var/lib/postgresql/data
+  #   networks:
+  #     - nest-network-prod
+  #   restart: always
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1'
+  #         memory: 1G
+  #       reservations:
+  #         cpus: '0.5'
+  #         memory: 512M
+
+# volumes:
+#   postgres_data_prod:
+#     driver: local
+
+# networks:
+#   nest-network-prod:
+#     driver: bridge
+
