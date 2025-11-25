@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { DrizzleService } from '@db/drizzle.service';
 import { companies } from '@schema/public/companies';
 import { users, type User } from '@schema/tenant/users';
@@ -52,16 +52,25 @@ export class UsersService {
         const schemaName = await this.getSchemaNameForCompany(companyId);
 
         return this.drizzle.withTenantDb(schemaName, async (db) => {
-            const [created] = await db
-                .insert(users)
-                .values({
-                    email: data.email,
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                })
-                .returning();
+            try {
+                const [created] = await db
+                    .insert(users)
+                    .values({
+                        email: data.email,
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                    })
+                    .returning();
 
-            return created;
+                return created;
+            } catch (error: any) {
+                // Check both direct code (pg error) and nested cause (drizzle wrapped error)
+                const errorCode = error.code || error.cause?.code;
+                if (errorCode === '23505') { // Postgres unique_violation
+                    throw new ConflictException('Email already exists for this company');
+                }
+                throw error;
+            }
         });
     }
 
@@ -69,13 +78,21 @@ export class UsersService {
         const schemaName = await this.getSchemaNameForCompany(companyId);
 
         return this.drizzle.withTenantDb(schemaName, async (db) => {
-            const [updated] = await db
-                .update(users)
-                .set(data)
-                .where(eq(users.id, userId))
-                .returning();
+            try {
+                const [updated] = await db
+                    .update(users)
+                    .set(data)
+                    .where(eq(users.id, userId))
+                    .returning();
 
-            return updated ?? null;
+                return updated ?? null;
+            } catch (error: any) {
+                const errorCode = error.code || error.cause?.code;
+                if (errorCode === '23505') {
+                    throw new ConflictException('Email already exists for this company');
+                }
+                throw error;
+            }
         });
     }
 

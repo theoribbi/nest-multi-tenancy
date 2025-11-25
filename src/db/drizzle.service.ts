@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Pool } from 'pg';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as publicSchema from './schema/public';
@@ -10,7 +10,7 @@ import { companies } from './schema/public';
 type DrizzleDb = NodePgDatabase<any>;
 
 @Injectable()
-export class DrizzleService implements OnModuleDestroy {
+export class DrizzleService implements OnModuleDestroy, OnModuleInit {
   private pool: Pool;
 
   public dbPublic: DrizzleDb;
@@ -21,6 +21,12 @@ export class DrizzleService implements OnModuleDestroy {
     'tenant',
   );
 
+  private publicMigrationsFolder = path.join(
+    process.cwd(),
+    'drizzle',
+    'public',
+  );
+
   constructor() {
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -29,15 +35,40 @@ export class DrizzleService implements OnModuleDestroy {
     this.dbPublic = drizzle(this.pool, { schema: publicSchema });
   }
 
+  async onModuleInit() {
+    await this.migratePublic();
+  }
+
   async onModuleDestroy() {
     await this.pool.end();
+  }
+
+  /**
+   * Migrate public schema
+   */
+  private async migratePublic(): Promise<void> {
+    console.log('Running public migrations from:', this.publicMigrationsFolder);
+    const client = await this.pool.connect();
+    try {
+      const db = drizzle(client);
+      await migrate(db, {
+        migrationsFolder: this.publicMigrationsFolder,
+        migrationsTable: '__drizzle_migrations_public',
+      });
+      console.log('✅ Public schema migrated');
+    } catch (error) {
+      console.error('❌ Public schema migration failed:', error);
+    } finally {
+      client.release();
+    }
   }
 
   /**
    * Creation of a tenant schema + application of tenant migrations
    */
   async createTenantSchema(schemaName: string): Promise<void> {
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(schemaName)) {
+    // Allow alphanumeric and underscores and hyphens
+    if (!/^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(schemaName)) {
       throw new Error(`Invalid schema name: ${schemaName}`);
     }
 
@@ -56,6 +87,9 @@ export class DrizzleService implements OnModuleDestroy {
 
       console.log(`✅ Tenant "${schemaName}" created + migrated`);
     } finally {
+      // Reset search_path to public before releasing the client to the pool
+      // Otherwise, subsequent queries using this client might fail finding public tables
+      await client.query('SET search_path TO public');
       client.release();
     }
   }

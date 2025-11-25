@@ -1,98 +1,50 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Nest Multi Tenancy with Drizzle ORM
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
+This project is a starter template for people that want to create a backend managing multi tenancy dynamicly by using Postgres Schema.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Technology used
+  - [NestJS](https://nestjs.com/)
+  - [Drizzle ORM](https://orm.drizzle.team/)
+  - [Scalar](https://scalar.com/)
+  - [Docker](https://www.docker.com/)
 
-## Description
+## Postgres Dynamic Schema with Drizzle ORM
+Drizzle ORM do not support officialy dynamic multi tenant support. See the docs [here](https://orm.drizzle.team/docs/sql-schema-declaration#schemas).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+So the goal of this project is to separate the *"public"* schema on the drizzle-kit management and the *"tenant"* schema on the JS runtime.
 
-## Project setup
+Thanks to the Github discussion that helped me a lot:
+  - [[BUG]: design: working with dynamic schemas is practically impossible #423](https://github.com/drizzle-team/drizzle-orm/issues/1807)
+  - [[FEATURE]: Dynamic Schema #1807](https://github.com/drizzle-team/drizzle-orm/issues/1807)
 
-```bash
-$ pnpm install
+## Get Started
+First of all you need [pnpm](https://pnpm.io/fr/) and [docker-compose](https://docs.docker.com/compose/) installed on your machine.
+
+1. Clone the project 
+```bash 
+https://github.com/theoribbi/nest-multi-tenancy.git
+```
+2. Launch Docker Containers
+```bash 
+docker-compose up --build
 ```
 
-## Compile and run the project
-
+3. Generate and execute public migration
 ```bash
-# development
-$ pnpm run start
+# TTY to app container
+docker exec -it nest-multi-tenancy-app sh
 
-# watch mode
-$ pnpm run start:dev
+# Generate migration for both public and tenant schema
+pnpm run db:generate
 
-# production mode
-$ pnpm run start:prod
+# Appliquate migration just for public sche,a
+pnpm run db:migrate
 ```
 
-## Run tests
+After that you can test to create multiple company, run tenant migration (on the JS runtime) and create user on each schema `http://localhost:3000/`
 
-```bash
-# unit tests
-$ pnpm run test
+Drizzle Studio Gateway is setup on `http://localhost:4983/` and you can see the result of your schema creation from here.
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Contribution
+If you have some question or want to contribute you are free to help !
